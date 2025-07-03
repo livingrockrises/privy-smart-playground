@@ -1,25 +1,48 @@
 import { useEffect, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { createPublicClient, http, formatEther } from "viem";
 import { mainnet } from "viem/chains";
 
 export default function App() {
   const { login, logout, ready, authenticated, user } = usePrivy();
+  const { wallets } = useWallets();
   const [ethBalance, setEthBalance] = useState<string>("");
   const [walletAddress, setWalletAddress] = useState<string>("");
 
   useEffect(() => {
     if (user?.id) {
       console.log("User authenticated:", user);
+      console.log("Wallets from useWallets hook:", wallets);
       
       // Get the embedded wallet
       const getWallet = async () => {
         try {
-          // For email login, the wallet should be available in user.wallet
-          if (user.wallet?.address) {
+          // Check if we have wallets from the useWallets hook
+          if (wallets && wallets.length > 0) {
+            const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
+            if (embeddedWallet) {
+              const address = embeddedWallet.address;
+              setWalletAddress(address);
+              console.log("Embedded wallet address:", address);
+              
+              // Get wallet balance
+              const client = createPublicClient({
+                chain: mainnet,
+                transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
+              });
+
+              const balance = await client.getBalance({ address: address as `0x${string}` });
+              const formattedBalance = formatEther(balance);
+              setEthBalance(formattedBalance);
+              console.log("Wallet balance:", formattedBalance, "ETH");
+            } else {
+              console.log("No embedded wallet found in wallets array");
+            }
+          } else if (user.wallet?.address) {
+            // Fallback to user.wallet if available
             const address = user.wallet.address;
             setWalletAddress(address);
-            console.log("Wallet address:", address);
+            console.log("Wallet address from user.wallet:", address);
             
             // Get wallet balance
             const client = createPublicClient({
@@ -32,7 +55,9 @@ export default function App() {
             setEthBalance(formattedBalance);
             console.log("Wallet balance:", formattedBalance, "ETH");
           } else {
-            console.log("No wallet address found in user object");
+            console.log("No wallet address found in user object or useWallets hook");
+            console.log("User object:", user);
+            console.log("Wallets array:", wallets);
           }
         } catch (error) {
           console.error("Error getting wallet:", error);
@@ -41,7 +66,7 @@ export default function App() {
 
       getWallet();
     }
-  }, [user?.id]);
+  }, [user?.id, wallets]);
 
   if (!ready) return <p>Loading Privy...</p>;
 
