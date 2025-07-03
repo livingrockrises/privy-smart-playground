@@ -6,24 +6,42 @@ import { mainnet } from "viem/chains";
 export default function App() {
   const { login, logout, ready, authenticated, user } = usePrivy();
   const [ethBalance, setEthBalance] = useState<string>("");
+  const [walletAddress, setWalletAddress] = useState<string>("");
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (!user?.wallet?.address) return;
+    if (user?.id) {
+      console.log("User authenticated:", user);
+      
+      // Get the embedded wallet
+      const getWallet = async () => {
+        try {
+          // For email login, the wallet should be available in user.wallet
+          if (user.wallet?.address) {
+            const address = user.wallet.address;
+            setWalletAddress(address);
+            console.log("Wallet address:", address);
+            
+            // Get wallet balance
+            const client = createPublicClient({
+              chain: mainnet,
+              transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
+            });
 
-      const client = createPublicClient({
-        chain: mainnet,
-        transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
-      });
+            const balance = await client.getBalance({ address: address as `0x${string}` });
+            const formattedBalance = formatEther(balance);
+            setEthBalance(formattedBalance);
+            console.log("Wallet balance:", formattedBalance, "ETH");
+          } else {
+            console.log("No wallet address found in user object");
+          }
+        } catch (error) {
+          console.error("Error getting wallet:", error);
+        }
+      };
 
-      const balance = await client.getBalance({ address: user.wallet.address as `0x${string}` });
-      setEthBalance(formatEther(balance));
-    };
-
-    if (authenticated && user?.wallet?.address) {
-      fetchBalance();
+      getWallet();
     }
-  }, [authenticated, user?.wallet?.address]);
+  }, [user?.id]);
 
   if (!ready) return <p>Loading Privy...</p>;
 
@@ -46,8 +64,6 @@ export default function App() {
     );
   }
 
-  const embeddedWallet = user?.wallet;
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -59,7 +75,7 @@ export default function App() {
             </div>
             
             <div className="flex items-center space-x-4">
-              {embeddedWallet && (
+              {ethBalance && (
                 <div className="text-sm text-gray-600">
                   <span className="font-medium">Balance:</span> {ethBalance} ETH
                 </div>
@@ -102,10 +118,23 @@ export default function App() {
               </div>
             )}
 
-            {embeddedWallet && (
+            {walletAddress && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Wallet Address</label>
-                <p className="text-sm text-gray-900 font-mono">{embeddedWallet.address}</p>
+                <label className="block text-sm font-medium text-gray-700">Embedded Wallet Address</label>
+                <p className="text-sm text-gray-900 font-mono break-all">{walletAddress}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  This wallet was automatically created for your email account
+                </p>
+              </div>
+            )}
+
+            {user?.wallet?.address && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Connected Wallet Address</label>
+                <p className="text-sm text-gray-900 font-mono break-all">{user.wallet.address}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  This is your connected external wallet
+                </p>
               </div>
             )}
 
@@ -119,11 +148,37 @@ export default function App() {
         </div>
 
         <div className="mt-8 bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Wallet Information</h3>
+          
+          <div className="space-y-4">
+            {walletAddress && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Embedded Wallet</label>
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <p className="text-sm text-gray-900 font-mono break-all">{walletAddress}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    This embedded wallet is automatically created and managed by Privy
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {ethBalance && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Current Balance</label>
+                <p className="text-2xl font-bold text-gray-900">{ethBalance} ETH</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">What's Next?</h3>
           <p className="text-gray-600 mb-4">
             This is a basic Privy integration. You can now:
           </p>
           <ul className="list-disc list-inside text-gray-600 space-y-2">
+            <li>Use the embedded wallet for transactions</li>
             <li>Add more authentication methods</li>
             <li>Implement wallet transactions</li>
             <li>Add user profile management</li>
@@ -139,7 +194,7 @@ export default function App() {
           <div className="text-center text-sm text-gray-500">
             <p>Powered by Privy • Secure • Simple</p>
             <p className="mt-1">
-              Basic authentication demo
+              Basic authentication demo with embedded wallet
             </p>
           </div>
         </div>
