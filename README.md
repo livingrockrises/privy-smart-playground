@@ -40,7 +40,7 @@ A simple web application demonstrating basic Privy authentication integration wi
    - Get your Privy App ID from [Privy Console](https://console.privy.io/)
    - Update `src/main.tsx` with your Privy App ID:
    ```typescript
-   const PRIVY_APP_ID = "your-privy-app-id-here";
+   const PRIVY_APP_ID = "your-privy-app-id";
    ```
 
 4. **Start the development server**
@@ -82,7 +82,7 @@ A simple web application demonstrating basic Privy authentication integration wi
 Set up proper environment variables for production:
 ```bash
 VITE_PRIVY_APP_ID=your-privy-app-id
-VITE_ALCHEMY_API_KEY=your-alchemy-key
+VITE_PRIVATE_KEY=your-private-key-for-eip-7702-transactions
 ```
 
 ### Customization
