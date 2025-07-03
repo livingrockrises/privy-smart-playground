@@ -48,14 +48,29 @@ A modern web application that enables users to set up automated Dollar Cost Aver
    npm install
    ```
 
-3. **Set up Privy**
-   - Get your Privy App ID from [Privy Console](https://console.privy.io/)
-   - Update `src/main.tsx` with your Privy App ID:
-   ```typescript
-   const PRIVY_APP_ID = "your-privy-app-id-here";
+3. **Set up environment variables**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env with your actual values
+   VITE_PRIVY_APP_ID=your_privy_app_id_here
+   VITE_ALCHEMY_API_KEY=your_alchemy_api_key_here
+   VITE_ALCHEMY_MAINNET_URL=https://eth-mainnet.g.alchemy.com/v2/your_api_key_here
    ```
 
-4. **Start the development server**
+4. **Get your Privy App ID**
+   - Go to [Privy Console](https://console.privy.io/)
+   - Create a new app or use an existing one
+   - Copy your App ID and add it to the `.env` file
+
+5. **Get your Alchemy API Key (optional)**
+   - Go to [Alchemy](https://www.alchemy.com/)
+   - Create a new app for Ethereum mainnet
+   - Copy your API key and add it to the `.env` file
+   - Note: The app works with the demo key, but for production use your own key
+
+6. **Start the development server**
    ```bash
    npm run dev
    ```

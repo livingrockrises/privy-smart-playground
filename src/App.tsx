@@ -17,9 +17,11 @@ export default function App() {
     const fetchBalance = async () => {
       if (!user?.wallet?.address) return;
 
+      const alchemyUrl = import.meta.env.VITE_ALCHEMY_MAINNET_URL || "https://eth-mainnet.g.alchemy.com/v2/demo";
+      
       const client = createPublicClient({
         chain: mainnet,
-        transport: http("https://eth-mainnet.g.alchemy.com/v2/demo"),
+        transport: http(alchemyUrl),
       });
 
       const balance = await client.getBalance({ address: user.wallet.address as `0x${string}` });
